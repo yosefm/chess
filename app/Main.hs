@@ -1,7 +1,8 @@
 module Main (main) where
 
+import System.Exit (exitFailure)
+import Codec.BMP (BMP, readBMP)
 import Graphics.Gloss
-import Graphics.Gloss.Data.Bitmap
 
 import Lib
 
@@ -23,12 +24,32 @@ board sidePix =
         
     in Translate (-halfBoard) (-halfBoard) $ Color black $ squares
 
+-- For now just white peon. Later: indicate which piece and side.
+showPiece :: Int -> BMP -> (Int,Int) -> Picture
+showPiece boardSide image (r,c) = 
+    let squareSide = boardSide `div` 8
+        bmpData = bitmapDataOfBMP image
+        (h,w) = bitmapSize bmpData
+        rowCoord = fromIntegral $ r*squareSide + ((h - boardSide) `div` 2)
+        colCoord = fromIntegral $ c*squareSide + ((w - boardSide) `div` 2)   
+    in Translate colCoord rowCoord $ Bitmap bmpData
+
+loadPieceOrDie :: IO BMP
+loadPieceOrDie = do
+    peonImageLoadRes <- readBMP "data/peon.bmp"
+    case peonImageLoadRes of 
+        Left e -> do
+            putStrLn $ show e
+            exitFailure
+        Right bmp -> return bmp
+
 main :: IO ()
 main = do 
-    peonImage <- loadBMP "data/peon.bmp"
+    peonImage <- loadPieceOrDie
 
-    let empty = board 600
-        withPeon = empty <> peonImage
+    let boardSide = 600
+        empty = board boardSide
+        withPeon = empty <> showPiece boardSide peonImage (0, 1)
         layedOutBoard = withPeon
     
     display (InWindow "Test Gloss" (600,600) (10,10)) white $ layedOutBoard

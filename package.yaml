@@ -47,6 +47,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - chess
+    - bmp
 
 tests:
   chess-test:
