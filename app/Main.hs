@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Graphics.Gloss
+import Graphics.Gloss.Data.Bitmap
 
 import Lib
 
@@ -23,5 +24,12 @@ board sidePix =
     in Translate (-halfBoard) (-halfBoard) $ Color black $ squares
 
 main :: IO ()
-main = display (InWindow "Test Gloss" (600,600) (10,10)) white $ board 600
+main = do 
+    peonImage <- loadBMP "data/peon.bmp"
+
+    let empty = board 600
+        withPeon = empty <> peonImage
+        layedOutBoard = withPeon
+    
+    display (InWindow "Test Gloss" (600,600) (10,10)) white $ layedOutBoard
 
