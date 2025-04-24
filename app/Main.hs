@@ -27,16 +27,17 @@ board sidePix =
 -- For now just white peon. Later: indicate which piece and side.
 showPiece :: Int -> BMP -> (Int,Int) -> Picture
 showPiece boardSide image (r,c) = 
-    let squareSide = boardSide `div` 8
+    let squareSide = fromIntegral $ boardSide `div` 8
         bmpData = bitmapDataOfBMP image
-        (h,w) = bitmapSize bmpData
-        rowCoord = fromIntegral $ r*squareSide + ((h - boardSide) `div` 2)
-        colCoord = fromIntegral $ c*squareSide + ((w - boardSide) `div` 2)   
-    in Translate colCoord rowCoord $ Bitmap bmpData
+        (tw,th) = bitmapSize bmpData
+        (pw,ph) = (55,75)
+        rowCoord = (fromIntegral r + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
+        colCoord = (fromIntegral c + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
+    in Translate colCoord rowCoord $ BitmapSection (Rectangle (0,th - ph) (pw,ph)) bmpData
 
-loadPieceOrDie :: IO BMP
-loadPieceOrDie = do
-    peonImageLoadRes <- readBMP "data/peon.bmp"
+loadPiecesOrDie :: IO BMP
+loadPiecesOrDie = do
+    peonImageLoadRes <- readBMP "data/akiross-Chess-Set.bmp"
     case peonImageLoadRes of 
         Left e -> do
             putStrLn $ show e
@@ -45,11 +46,11 @@ loadPieceOrDie = do
 
 main :: IO ()
 main = do 
-    peonImage <- loadPieceOrDie
+    piecesImage <- loadPiecesOrDie
 
     let boardSide = 600
         empty = board boardSide
-        withPeon = empty <> showPiece boardSide peonImage (0, 1)
+        withPeon = empty <> showPiece boardSide piecesImage (0, 1)
         layedOutBoard = withPeon
     
     display (InWindow "Test Gloss" (600,600) (10,10)) white $ layedOutBoard
