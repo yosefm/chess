@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Main (main) where
 
 import qualified Data.Map as M
@@ -8,6 +10,7 @@ import Codec.BMP (BMP, readBMP)
 import Graphics.Gloss
 
 import Lib
+import Array2D (Arr2D, mkArr2D, Extents(..), merge, (@))
 
 data BoardVisualProps = BoardVP {
     boardSidePix :: Int
@@ -34,6 +37,33 @@ pieceRects = M.fromList [
 
 maxPieceHeight :: Int
 maxPieceHeight = maximum $ map (snd . rectSize) $ M.elems pieceRects
+
+-- Generate initial positions for all pieces as 
+-- a replacements list for Arr2D (i.e. sparse representation)
+startPositions :: [((Int, Int), Square)]
+startPositions = 
+    let piecesFirstRank = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
+        squaresRank1 side = map (Sq side) piecesFirstRank
+
+        rank1 = map (0,) $ enumFromTo 0 7
+        replsRank1 = zip rank1 $ squaresRank1 White
+
+        rank2 = map (1,) $ enumFromTo 0 7
+        replsRank2 = zip rank2 $ map (Sq White) $ repeat Peon
+
+        rank7 = map (6,) $ enumFromTo 0 7
+        replsRank7 = zip rank7 $ map (Sq Black) $ repeat Peon
+
+        rank8 = map (7,) $ enumFromTo 0 7
+        replsRank8 = zip rank8 $ squaresRank1 Black
+        
+    in concat [replsRank1, replsRank2, replsRank7, replsRank8]
+
+type Board = Arr2D Square
+
+startBoard :: Board
+startBoard = fromJust $ merge emptyBoard startPositions
+    where emptyBoard = fromJust $ mkArr2D (Ex 8 8) $ take 64 $ repeat EmptySq
 
 square :: Int -> Picture
 square sidePix = Polygon [(0,0), (side,0), (side,side), (0,side)]
@@ -70,6 +100,11 @@ showPiece (BoardVP boardSide image) (r,c) (Sq side piece) =
 
     in Translate colCoord rowCoord $ Scale scale scale $ BitmapSection rect bmpData
 
+showBoard :: BoardVisualProps -> Board -> Picture
+showBoard bvp board = 
+    let boardCoords = [(row, col) | row <- [0..7], col <- [0..7]]
+    in mconcat $ map (\at -> showPiece bvp at $ board @ at) boardCoords
+
 loadPiecesOrDie :: IO BMP
 loadPiecesOrDie = do
     peonImageLoadRes <- readBMP "data/akiross-Chess-Set.bmp"
@@ -85,20 +120,7 @@ main = do
 
     let boardSide = 600
         boardVis = BoardVP boardSide piecesImage
-        empty = board boardSide
-        layedOutBoard = empty 
-            <> showPiece boardVis (1, 0) (Sq White Peon)
-            <> showPiece boardVis (0, 0) (Sq White Rook)
-            <> showPiece boardVis (0, 1) (Sq White Knight)
-            <> showPiece boardVis (0, 2) (Sq White Bishop)
-            <> showPiece boardVis (0, 3) (Sq White Queen)
-            <> showPiece boardVis (0, 4) (Sq White King)
-            <> showPiece boardVis (6, 0) (Sq Black Peon)
-            <> showPiece boardVis (7, 0) (Sq Black Rook)
-            <> showPiece boardVis (7, 1) (Sq Black Knight)
-            <> showPiece boardVis (7, 2) (Sq Black Bishop)
-            <> showPiece boardVis (7, 3) (Sq Black Queen)
-            <> showPiece boardVis (7, 4) (Sq Black King)
+        layedOutBoard = board boardSide <> showBoard boardVis startBoard
     
-    display (InWindow "Test Gloss" (600,600) (10,10)) white $ layedOutBoard
+    display (InWindow "Test Gloss" (boardSide,boardSide) (10,10)) white $ layedOutBoard
 

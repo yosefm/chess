@@ -22,6 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - gloss
+- array2d
 
 ghc-options:
 - -Wall
@@ -49,6 +50,7 @@ executables:
     - chess
     - bmp
     - containers
+    - array2d
 
 tests:
   chess-test:
