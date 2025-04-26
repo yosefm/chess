@@ -20,8 +20,12 @@ pieceRects :: M.Map (Side,Piece) Rectangle
 pieceRects = M.fromList [
     ((White, Peon), Rectangle (0,170) (55,75))
   , ((White, Rook), Rectangle (65,164) (55,81))
-  , ((White, Knight), Rectangle (135,155) (76,91))
+  , ((White, Knight), Rectangle (135,155) (76,90))
+  , ((White, Bishop), Rectangle (214,132) (80, 113))
   ]
+
+maxPieceHeight :: Int
+maxPieceHeight = maximum $ map (snd . rectSize) $ M.elems pieceRects
 
 square :: Int -> Picture
 square sidePix = Polygon [(0,0), (side,0), (side,side), (0,side)]
@@ -54,7 +58,9 @@ showPiece (BoardVP boardSide image) (r,c) (Sq side piece) =
         rowCoord = (fromIntegral r + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
         colCoord = (fromIntegral c + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
 
-    in Translate colCoord rowCoord $ BitmapSection rect bmpData
+        scale = squareSide / fromIntegral maxPieceHeight
+
+    in Translate colCoord rowCoord $ Scale scale scale $ BitmapSection rect bmpData
 
 loadPiecesOrDie :: IO BMP
 loadPiecesOrDie = do
@@ -76,6 +82,7 @@ main = do
             <> showPiece boardVis (1, 0) (Sq White Peon)
             <> showPiece boardVis (0, 0) (Sq White Rook)
             <> showPiece boardVis (0, 1) (Sq White Knight)
+            <> showPiece boardVis (0, 2) (Sq White Bishop)
     
     display (InWindow "Test Gloss" (600,600) (10,10)) white $ layedOutBoard
 
