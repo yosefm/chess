@@ -19,9 +19,17 @@ data BoardVisualProps = BoardVP {
 pieceRects :: M.Map (Side,Piece) Rectangle
 pieceRects = M.fromList [
     ((White, Peon), Rectangle (0,170) (55,75))
-  , ((White, Rook), Rectangle (65,164) (55,81))
-  , ((White, Knight), Rectangle (135,155) (76,90))
-  , ((White, Bishop), Rectangle (214,132) (80, 113))
+  , ((White, Rook), Rectangle (67,165) (56,80))
+  , ((White, Knight), Rectangle  (141,154) (66,91))
+  , ((White, Bishop), Rectangle  (221,132) (56,113))
+  , ((White, Queen), Rectangle (296,111) (61,134))
+  , ((White, King), Rectangle (376,97) (55,148))
+  , ((Black, Peon), Rectangle (376,0) (55,76))
+  , ((Black, Rook), Rectangle (308,0) (56,80))
+  , ((Black, Knight), Rectangle (224,0) (66,91))
+  , ((Black, Bishop), Rectangle (154,0) (56,113))
+  , ((Black, Queen), Rectangle (74,0) (61,134))
+  , ((Black, King), Rectangle (0,0) (55,148))
   ]
 
 maxPieceHeight :: Int
@@ -83,6 +91,14 @@ main = do
             <> showPiece boardVis (0, 0) (Sq White Rook)
             <> showPiece boardVis (0, 1) (Sq White Knight)
             <> showPiece boardVis (0, 2) (Sq White Bishop)
+            <> showPiece boardVis (0, 3) (Sq White Queen)
+            <> showPiece boardVis (0, 4) (Sq White King)
+            <> showPiece boardVis (6, 0) (Sq Black Peon)
+            <> showPiece boardVis (7, 0) (Sq Black Rook)
+            <> showPiece boardVis (7, 1) (Sq Black Knight)
+            <> showPiece boardVis (7, 2) (Sq Black Bishop)
+            <> showPiece boardVis (7, 3) (Sq Black Queen)
+            <> showPiece boardVis (7, 4) (Sq Black King)
     
     display (InWindow "Test Gloss" (600,600) (10,10)) white $ layedOutBoard
 
