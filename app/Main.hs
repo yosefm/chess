@@ -1,10 +1,27 @@
 module Main (main) where
 
+import qualified Data.Map as M
+import Data.Maybe (fromJust)
+
 import System.Exit (exitFailure)
 import Codec.BMP (BMP, readBMP)
 import Graphics.Gloss
 
 import Lib
+
+data BoardVisualProps = BoardVP {
+    boardSidePix :: Int
+  , pieceImages :: BMP
+}
+
+-- I mean, I could do O(n) lookup with Ix and Vector,
+-- but it would look ugly and there's no call for performance here.
+pieceRects :: M.Map (Side,Piece) Rectangle
+pieceRects = M.fromList [
+    ((White, Peon), Rectangle (0,170) (55,75))
+  , ((White, Rook), Rectangle (65,164) (55,81))
+  , ((White, Knight), Rectangle (135,155) (76,91))
+  ]
 
 square :: Int -> Picture
 square sidePix = Polygon [(0,0), (side,0), (side,side), (0,side)]
@@ -25,15 +42,19 @@ board sidePix =
     in Translate (-halfBoard) (-halfBoard) $ Color black $ squares
 
 -- For now just white peon. Later: indicate which piece and side.
-showPiece :: Int -> BMP -> (Int,Int) -> Picture
-showPiece boardSide image (r,c) = 
+showPiece :: BoardVisualProps -> (Int,Int) -> Square -> Picture
+showPiece _ _ EmptySq = Blank
+
+showPiece (BoardVP boardSide image) (r,c) (Sq side piece) = 
     let squareSide = fromIntegral $ boardSide `div` 8
         bmpData = bitmapDataOfBMP image
         (tw,th) = bitmapSize bmpData
-        (pw,ph) = (55,75)
+        rect = fromJust $ M.lookup (side,piece) pieceRects
+
         rowCoord = (fromIntegral r + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
         colCoord = (fromIntegral c + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
-    in Translate colCoord rowCoord $ BitmapSection (Rectangle (0,th - ph) (pw,ph)) bmpData
+
+    in Translate colCoord rowCoord $ BitmapSection rect bmpData
 
 loadPiecesOrDie :: IO BMP
 loadPiecesOrDie = do
@@ -49,9 +70,12 @@ main = do
     piecesImage <- loadPiecesOrDie
 
     let boardSide = 600
+        boardVis = BoardVP boardSide piecesImage
         empty = board boardSide
-        withPeon = empty <> showPiece boardSide piecesImage (0, 1)
-        layedOutBoard = withPeon
+        layedOutBoard = empty 
+            <> showPiece boardVis (1, 0) (Sq White Peon)
+            <> showPiece boardVis (0, 0) (Sq White Rook)
+            <> showPiece boardVis (0, 1) (Sq White Knight)
     
     display (InWindow "Test Gloss" (600,600) (10,10)) white $ layedOutBoard
 

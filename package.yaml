@@ -48,6 +48,7 @@ executables:
     dependencies:
     - chess
     - bmp
+    - containers
 
 tests:
   chess-test:
