@@ -8,7 +8,7 @@ import Codec.BMP (BMP, readBMP)
 import Graphics.Gloss
 
 import Lib
-import Array2D ((@))
+import Array2D ((@), Coords)
 
 data BoardVisualProps = BoardVP {
     boardSidePix :: Int
@@ -55,7 +55,7 @@ board sidePix =
     in Translate (-halfBoard) (-halfBoard) $ Color black $ squares
 
 -- For now just white peon. Later: indicate which piece and side.
-showPiece :: BoardVisualProps -> (Int,Int) -> Square -> Picture
+showPiece :: BoardVisualProps -> Coords -> Square -> Picture
 showPiece _ _ EmptySq = Blank
 
 showPiece (BoardVP boardSide image) (r,c) (Sq side piece) = 
@@ -75,6 +75,15 @@ showBoard bvp board =
     let boardCoords = [(row, col) | row <- [0..7], col <- [0..7]]
     in mconcat $ map (\at -> showPiece bvp at $ board @ at) boardCoords
 
+showSelection :: BoardVisualProps -> Coords -> Picture
+showSelection (BoardVP boardSide _) (r,c) = 
+    let squareSide = boardSide `div` 8
+        rowCoord = fromIntegral $ r*squareSide - boardSide `div` 2
+        colCoord = fromIntegral $ c*squareSide - boardSide `div` 2
+    
+    in Translate colCoord rowCoord $ Color red $ square squareSide
+
+
 loadPiecesOrDie :: IO BMP
 loadPiecesOrDie = do
     peonImageLoadRes <- readBMP "data/akiross-Chess-Set.bmp"
@@ -90,7 +99,7 @@ main = do
 
     let boardSide = 600
         boardVis = BoardVP boardSide piecesImage
-        layedOutBoard = board boardSide <> showBoard boardVis startBoard
+        layedOutBoard = board boardSide <> showSelection boardVis (1,0) <> showBoard boardVis startBoard
     
     display (InWindow "Test Gloss" (boardSide,boardSide) (10,10)) white $ layedOutBoard
 
