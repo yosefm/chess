@@ -10,7 +10,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
 
 import Lib
-import Array2D ((@), Coords)
+import Array2D ((@), Extents(..), Coords, inBounds)
 
 data BoardVisualProps = BoardVP {
     boardSidePix :: Int
@@ -109,10 +109,24 @@ showGame g =
       , Just (showBoard bvp $ boardState g)
       ]
 
+-- convert mouse click position to square coordinates
+-- Nothing if the coordinates are out of board or
+-- the selected square is empty or the piece is of
+-- the wrong side 
+selectedPiece :: Game -> (Float,Float) -> Maybe Coords
+selectedPiece g (x,y) = 
+    let boardSide = boardSidePix $ boardVis g
+        halfBoard = fromIntegral $ boardSide `div` 2
+        squareSide = fromIntegral $ boardSide `div` 8
+        crd = (truncate ((y + halfBoard)/squareSide),  truncate ((x + halfBoard)/squareSide))
+        square = boardState g @ crd
+        valid = inBounds (Ex 8 8) crd && squareTaken square && sqSide square == toPlay g
+    in if valid then Just crd else Nothing 
+
 eventCallback :: Event -> Game -> Game
-eventCallback (EventKey (MouseButton LeftButton) Down _ _) g = 
+eventCallback (EventKey (MouseButton LeftButton) Down _ clickPos) g = 
     case selected g of
-        Nothing -> g{selected = Just (1,0)}
+        Nothing -> g{selected = selectedPiece g clickPos}
         Just _ -> g{selected = Nothing}
 
 eventCallback _ g = g
@@ -136,5 +150,5 @@ main = do
     play 
         (InWindow "StupidChess" (boardSide,boardSide) (10,10)) 
         white 30 gameInitState 
-        showGame eventCallback (\t g -> g)
+        showGame eventCallback (\_ g -> g)
     

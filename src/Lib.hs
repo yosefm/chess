@@ -3,6 +3,7 @@
 module Lib (
     Side(..), Piece(..), Square(..), Board
   , startPositions, startBoard
+  , squareTaken
 ) where
 
 import Data.Maybe (fromJust)
@@ -12,8 +13,11 @@ data Side = White | Black
     deriving (Eq, Ord)
 data Piece = Peon | Rook | Knight | Bishop | Queen | King
     deriving (Eq, Ord)
-data Square = EmptySq | Sq Side Piece
+data Square = EmptySq | Sq { sqSide :: Side, sqPiece :: Piece }
 
+squareTaken :: Square -> Bool
+squareTaken EmptySq = False
+squareTaken _ = True
 
 -- Generate initial positions for all pieces as 
 -- a replacements list for Arr2D (i.e. sparse representation)
