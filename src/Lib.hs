@@ -55,5 +55,6 @@ validMoves  brd crd@(r,c) =
         Sq side piece -> case piece of
             Peon -> let advance White = 1
                         advance Black = (-1)
-                    in filter (inBounds $ arrShape brd) [(r + advance side, c), (r + (2*advance side), c)]
+                        advanceValid crd' = inBounds (arrShape brd) crd' && not (squareTaken $ brd @ crd')
+                    in filter advanceValid [(r + advance side, c), (r + (2*advance side), c)]
             _ -> []
