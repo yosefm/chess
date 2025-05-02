@@ -1,7 +1,7 @@
 module Main (main) where
 
 import qualified Data.Map as M
-import Data.Maybe (fromJust, catMaybes)
+import Data.Maybe (fromJust, catMaybes, fromMaybe)
 
 import System.Exit (exitFailure)
 import Codec.BMP (BMP, readBMP)
@@ -103,11 +103,11 @@ data Game = Game {
 showGame :: Game -> Picture
 showGame g = 
     let bvp = boardVis g
-    in mconcat $ catMaybes [
+    in (mconcat $ catMaybes [
         Just (board $ boardSidePix bvp)
       , showSelection bvp <$> selected g
-      , Just (showBoard bvp $ boardState g)
-      ]
+      ] ++ (map (showValidTarget bvp) $ fromMaybe [] (validMoves (boardState g) <$> selected g))
+    ) <> (showBoard bvp $ boardState g)
 
 -- convert mouse click position to square coordinates
 -- Nothing if the coordinates are out of board or

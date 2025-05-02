@@ -3,11 +3,11 @@
 module Lib (
     Side(..), Piece(..), Square(..), Board
   , startPositions, startBoard
-  , squareTaken
+  , squareTaken, validMoves
 ) where
 
 import Data.Maybe (fromJust)
-import Array2D (Arr2D, mkArr2D, Extents(..), merge)
+import Array2D (Arr2D(..), mkArr2D, Extents(..), Coords, (@), inBounds, merge)
 
 data Side = White | Black 
     deriving (Eq, Ord)
@@ -30,10 +30,10 @@ startPositions =
         replsRank1 = zip rank1 $ squaresRank1 White
 
         rank2 = map (1,) $ enumFromTo 0 7
-        replsRank2 = zip rank2 $ map (Sq White) $ repeat Peon
+        replsRank2 = map (,Sq White Peon) rank2
 
         rank7 = map (6,) $ enumFromTo 0 7
-        replsRank7 = zip rank7 $ map (Sq Black) $ repeat Peon
+        replsRank7 = map (,Sq Black Peon) rank7
 
         rank8 = map (7,) $ enumFromTo 0 7
         replsRank8 = zip rank8 $ squaresRank1 Black
@@ -44,5 +44,16 @@ type Board = Arr2D Square
 
 startBoard :: Board
 startBoard = fromJust $ merge emptyBoard startPositions
-    where emptyBoard = fromJust $ mkArr2D (Ex 8 8) $ take 64 $ repeat EmptySq
+    where emptyBoard = fromJust $ mkArr2D (Ex 8 8) $ replicate 64 EmptySq
 
+-- assume coords are in bounds.
+validMoves :: Board -> Coords -> [Coords]
+validMoves  brd crd@(r,c) = 
+    let originSq = brd @ crd
+    in case originSq of 
+        EmptySq -> []
+        Sq side piece -> case piece of
+            Peon -> let advance White = 1
+                        advance Black = (-1)
+                    in filter (inBounds $ arrShape brd) [(r + advance side, c), (r + (2*advance side), c)]
+            _ -> []
