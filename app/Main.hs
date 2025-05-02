@@ -83,6 +83,13 @@ showSelection (BoardVP boardSide _) (r,c) =
     
     in Translate colCoord rowCoord $ Color red $ square squareSide
 
+showValidTarget :: BoardVisualProps -> Coords -> Picture
+showValidTarget (BoardVP boardSide _) (r,c) = 
+    let squareSide = fromIntegral $ boardSide `div` 8
+        rowCoord = (fromIntegral r + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
+        colCoord = (fromIntegral c + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
+    
+    in Translate colCoord rowCoord $ Color red $ Circle $ 0.45*squareSide
 
 loadPiecesOrDie :: IO BMP
 loadPiecesOrDie = do
@@ -99,7 +106,9 @@ main = do
 
     let boardSide = 600
         boardVis = BoardVP boardSide piecesImage
-        layedOutBoard = board boardSide <> showSelection boardVis (1,0) <> showBoard boardVis startBoard
+        layedOutBoard = board boardSide 
+            <> showSelection boardVis (1,0) 
+            <> showValidTarget boardVis (2,0) 
+            <> showBoard boardVis startBoard
     
-    display (InWindow "Test Gloss" (boardSide,boardSide) (10,10)) white $ layedOutBoard
-
+    display (InWindow "StupidChess" (boardSide,boardSide) (10,10)) white $ layedOutBoard
