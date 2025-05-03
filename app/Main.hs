@@ -1,7 +1,7 @@
 module Main (main) where
 
 import qualified Data.Map as M
-import Data.Maybe (fromJust, catMaybes, fromMaybe)
+import Data.Maybe (fromJust, catMaybes)
 
 import System.Exit (exitFailure)
 import Codec.BMP (BMP, readBMP)
@@ -51,10 +51,10 @@ board sidePix =
 
         makeSqr (r,c) = Translate 
             (fromIntegral $ c*squareSide) (fromIntegral $ r*squareSide) 
-            $ Color (if ((r + c) `mod` 2) == 0 then black else white)
+            $ Color (if even (r + c) then black else white)
             $ square squareSide
         
-    in Translate (-halfBoard) (-halfBoard) $ Color black $ squares
+    in Translate (-halfBoard) (-halfBoard) $ Color black squares
 
 -- For now just white peon. Later: indicate which piece and side.
 showPiece :: BoardVisualProps -> Coords -> Square -> Picture
@@ -103,11 +103,11 @@ data Game = Game {
 showGame :: Game -> Picture
 showGame g = 
     let bvp = boardVis g
-    in (mconcat $ catMaybes [
+    in mconcat (catMaybes [
         Just (board $ boardSidePix bvp)
       , showSelection bvp <$> selected g
-      ] ++ (map (showValidTarget bvp) $ fromMaybe [] (validMoves (boardState g) <$> selected g))
-    ) <> (showBoard bvp $ boardState g)
+      ] ++ map (showValidTarget bvp) (maybe [] (validMoves (boardState g)) (selected g)))
+    <> showBoard bvp (boardState g)
 
 -- convert mouse click position to square coordinates
 -- Nothing if the coordinates are out of board or
@@ -136,7 +136,7 @@ loadPiecesOrDie = do
     peonImageLoadRes <- readBMP "data/akiross-Chess-Set.bmp"
     case peonImageLoadRes of 
         Left e -> do
-            putStrLn $ show e
+            print e
             exitFailure
         Right bmp -> return bmp
 
