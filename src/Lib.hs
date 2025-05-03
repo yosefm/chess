@@ -2,7 +2,7 @@
 
 module Lib (
     Side(..), Piece(..), Square(..), Board
-  , startPositions, startBoard
+  , startPositions, startBoard, emptyBoard
   , squareTaken, validMoves
 ) where
 
@@ -42,9 +42,11 @@ startPositions =
 
 type Board = Arr2D Square
 
+emptyBoard :: Board
+emptyBoard = fromJust $ mkArr2D (Ex 8 8) $ replicate 64 EmptySq
+
 startBoard :: Board
 startBoard = fromJust $ merge emptyBoard startPositions
-    where emptyBoard = fromJust $ mkArr2D (Ex 8 8) $ replicate 64 EmptySq
 
 -- assume coords are in bounds.
 validMoves :: Board -> Coords -> [Coords]
