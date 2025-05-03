@@ -54,3 +54,12 @@ main = hspec $ do
                   ]
             validMoves brd (2,2) `shouldSatisfy` equalAsSets 
                 [(2,3), (2,1), (2,0), (1,2), (0,2), (3,2), (4,2), (3,3), (3,1), (4,0), (1,1), (1,3), (0,0), (0,4)]
+        
+        it "generates knight moves except on own pieces" $ do
+            let brd = fromJust $ merge emptyBoard [
+                    ((4,4), Sq White Knight)
+                  , ((6,5), Sq White Peon) -- blocked right moves by same side
+                  , ((6,-5), Sq Black Peon) -- blocked up moves by strike
+                  ]
+            validMoves brd (4,4) `shouldSatisfy` equalAsSets 
+                [(6,3), (2,5), (2,3), (5,2), (5,6), (3,2), (3,6)]

@@ -83,5 +83,10 @@ validMoves  brd crd@(r,c) =
             Rook -> axisRays >>= toBlockOrStrike side
             Bishop -> diagRays >>= toBlockOrStrike side
             Queen -> axisRays ++ diagRays >>= toBlockOrStrike side
-            
+
+            Knight -> let allowedMove crd' = inBounds (arrShape brd) crd' 
+                            && (not (squareTaken $ brd @ crd') || sqSide (brd @ crd') /= side)
+                in filter allowedMove [(r + dr, c + dc) | 
+                    (dr,dc) <- [(2,1), (2,-1), (-2,1), (-2,-1), (1,2), (1,-2), (-1,2), (-1,-2)]]
+
             _ -> []
