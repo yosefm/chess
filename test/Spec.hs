@@ -25,7 +25,7 @@ main = hspec $ do
                   ]
             validMoves brd (1,1) `shouldSatisfy` equalAsSets [(2,0), (2,2)]
         
-        it "lets rook Move to board ends except blocking and striking" $ do
+        it "lets rook move to board ends except blocking and striking" $ do
             let brd = fromJust $ merge emptyBoard [
                     ((2,2), Sq White Rook)
                   , ((2,4), Sq White Peon) -- blocked right moves by same side
@@ -33,3 +33,12 @@ main = hspec $ do
                   ]
             validMoves brd (2,2) `shouldSatisfy` equalAsSets 
                 [(2,3), (2,1), (2,0), (1,2), (0,2), (3,2), (4,2)]
+        
+        it "lets bishop move diagonally except blocking and striking"$ do
+            let brd = fromJust $ merge emptyBoard [
+                    ((2,2), Sq White Bishop)
+                  , ((4,4), Sq White Peon) -- blocked right moves by same side
+                  , ((4,0), Sq Black Peon) -- blocked up moves by strike
+                  ]
+            validMoves brd (2,2) `shouldSatisfy` equalAsSets 
+                [(3,3), (3,1), (4,0), (1,1), (1,3), (0,0), (0,4)]
