@@ -52,7 +52,9 @@ validMoves  brd crd@(r,c) =
         diagRays = [ray 1 1, ray 1 (-1), ray (-1) 1, ray (-1) (-1)]
 
         advanceValid crd' = inBounds (arrShape brd) crd' && not (squareTaken $ brd @ crd')
-        
+        advanceOrStrike side' crd' = inBounds (arrShape brd) crd' 
+                            && (not (squareTaken $ brd @ crd') || sqSide (brd @ crd') /= side')
+                        
         takeIfStrike _ [] = []
         takeIfStrike side' (mv:_) = [
                mv| inBounds (arrShape brd) mv && sqSide (brd @ mv) /= side'
@@ -78,9 +80,7 @@ validMoves  brd crd@(r,c) =
             Bishop -> diagRays >>= toBlockOrStrike side
             Queen -> axisRays ++ diagRays >>= toBlockOrStrike side
 
-            Knight -> let allowedMove crd' = inBounds (arrShape brd) crd' 
-                            && (not (squareTaken $ brd @ crd') || sqSide (brd @ crd') /= side)
-                in filter allowedMove [(r + dr, c + dc) | 
-                    (dr,dc) <- [(2,1), (2,-1), (-2,1), (-2,-1), (1,2), (1,-2), (-1,2), (-1,-2)]]
+            Knight -> filter (advanceOrStrike side) [(r + dr, c + dc) | 
+                        (dr,dc) <- [(2,1), (2,-1), (-2,1), (-2,-1), (1,2), (1,-2), (-1,2), (-1,-2)]]
 
-            _ -> []
+            King -> filter (advanceOrStrike side) [(r + dr, c + dc) | dr <- [-1..1], dc <-[-1..1]]

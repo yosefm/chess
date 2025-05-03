@@ -63,3 +63,12 @@ main = hspec $ do
                   ]
             validMoves brd (4,4) `shouldSatisfy` equalAsSets 
                 [(6,3), (2,5), (2,3), (5,2), (5,6), (3,2), (3,6)]
+        
+        it "generates correct king moves" $ do
+            let brd = fromJust $ merge emptyBoard [
+                    ((2,2), Sq White King)
+                  , ((3,3), Sq White Peon) -- blocked right moves by same side
+                  , ((2,3), Sq Black Peon) -- blocked up moves by strike
+                  ]
+            validMoves brd (2,2) `shouldSatisfy` equalAsSets 
+                [(3,1), (3,2), (2,1), (2,3), (1,1), (1,2), (1,3)]
