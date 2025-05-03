@@ -52,7 +52,11 @@ startBoard = fromJust $ merge emptyBoard startPositions
 validMoves :: Board -> Coords -> [Coords]
 validMoves  brd crd@(r,c) = 
     let originSq = brd @ crd
+        
         ray dr dc = [(r + dr*n, c + dc*n) | n <- [1..]]
+        axisRays = [ray 0 1, ray 0 (-1), ray 1 0, ray (-1) 0]
+        diagRays = [ray 1 1, ray 1 (-1), ray (-1) 1, ray (-1) (-1)]
+
         advanceValid crd' = inBounds (arrShape brd) crd' && not (squareTaken $ brd @ crd')
         
         takeIfStrike _ [] = []
@@ -76,7 +80,8 @@ validMoves  brd crd@(r,c) =
 
                     in advanceMoves ++ strikeMoves
             
-            Rook -> [ray 0 1, ray 0 (-1), ray 1 0, ray (-1) 0] >>= toBlockOrStrike side
-            Bishop -> [ray 1 1, ray 1 (-1), ray (-1) 1, ray (-1) (-1)] >>= toBlockOrStrike side
-
+            Rook -> axisRays >>= toBlockOrStrike side
+            Bishop -> diagRays >>= toBlockOrStrike side
+            Queen -> axisRays ++ diagRays >>= toBlockOrStrike side
+            
             _ -> []
