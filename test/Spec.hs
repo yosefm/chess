@@ -24,4 +24,12 @@ main = hspec $ do
                   , ((2,2), Sq Black Peon)
                   ]
             validMoves brd (1,1) `shouldSatisfy` equalAsSets [(2,0), (2,2)]
-
+        
+        it "lets rook Move to board ends except blocking and striking" $ do
+            let brd = fromJust $ merge emptyBoard [
+                    ((2,2), Sq White Rook)
+                  , ((2,4), Sq White Peon) -- blocked right moves by same side
+                  , ((4,2), Sq Black Peon) -- blocked up moves by strike
+                  ]
+            validMoves brd (2,2) `shouldSatisfy` equalAsSets 
+                [(2,3), (2,1), (2,0), (1,2), (0,2), (3,2), (4,2)]

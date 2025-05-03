@@ -52,17 +52,31 @@ startBoard = fromJust $ merge emptyBoard startPositions
 validMoves :: Board -> Coords -> [Coords]
 validMoves  brd crd@(r,c) = 
     let originSq = brd @ crd
+        advanceValid crd' = inBounds (arrShape brd) crd' && not (squareTaken $ brd @ crd')
+        
     in case originSq of 
         EmptySq -> []
         Sq side piece -> case piece of
             Peon -> let advance White = 1
                         advance Black = (-1)
-                        advanceValid crd' = inBounds (arrShape brd) crd' && not (squareTaken $ brd @ crd')
                         advanceMoves = takeWhile advanceValid [(r + advance side, c), (r + (2*advance side), c)]
 
                         strikeValid crd' = inBounds (arrShape brd) crd' 
                             && squareTaken (brd @ crd') 
                             && sqSide (brd @ crd') /= side
                         strikeMoves = filter strikeValid [(r + advance side, c - 1), (r + advance side, c + 1)]
+
                     in advanceMoves ++ strikeMoves
+            
+            Rook -> let rightMoves = map (r,) [(c + 1) ..]
+                        leftMoves = map (r,) [(c - 1), (c - 2) ..]
+                        upMoves = map (,c) [(r + 1) ..]
+                        downMoves = map (,c) [(r - 1), (r - 2) ..]
+                        
+                        takeIfStrike [] = []
+                        takeIfStrike (mv:_) = [mv| inBounds (arrShape brd) mv && sqSide (brd @ mv) /= side]
+                        
+                    in  [rightMoves, leftMoves, upMoves, downMoves] >>=
+                        (((++) <$> fst <*> takeIfStrike . snd) . span advanceValid) 
+                        
             _ -> []
