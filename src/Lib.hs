@@ -58,5 +58,11 @@ validMoves  brd crd@(r,c) =
             Peon -> let advance White = 1
                         advance Black = (-1)
                         advanceValid crd' = inBounds (arrShape brd) crd' && not (squareTaken $ brd @ crd')
-                    in filter advanceValid [(r + advance side, c), (r + (2*advance side), c)]
+                        advanceMoves = takeWhile advanceValid [(r + advance side, c), (r + (2*advance side), c)]
+
+                        strikeValid crd' = inBounds (arrShape brd) crd' 
+                            && squareTaken (brd @ crd') 
+                            && sqSide (brd @ crd') /= side
+                        strikeMoves = filter strikeValid [(r + advance side, c - 1), (r + advance side, c + 1)]
+                    in advanceMoves ++ strikeMoves
             _ -> []
