@@ -25,18 +25,12 @@ startPositions :: [((Int, Int), Square)]
 startPositions = 
     let piecesFirstRank = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
         squaresRank1 side = map (Sq side) piecesFirstRank
-
-        rank1 = map (0,) $ enumFromTo 0 7
-        replsRank1 = zip rank1 $ squaresRank1 White
-
-        rank2 = map (1,) $ enumFromTo 0 7
-        replsRank2 = map (,Sq White Peon) rank2
-
-        rank7 = map (6,) $ enumFromTo 0 7
-        replsRank7 = map (,Sq Black Peon) rank7
-
-        rank8 = map (7,) $ enumFromTo 0 7
-        replsRank8 = zip rank8 $ squaresRank1 Black
+        rank n = map (n,) [0..7]
+        
+        replsRank1 = zip (rank 0) $ squaresRank1 White
+        replsRank2 = map (,Sq White Peon) $ rank 1
+        replsRank7 = map (,Sq Black Peon) $ rank 6
+        replsRank8 = zip (rank 7) $ squaresRank1 Black
         
     in concat [replsRank1, replsRank2, replsRank7, replsRank8]
 
