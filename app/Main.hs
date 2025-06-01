@@ -10,7 +10,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
 
 import Lib
-import Array2D ((@), Extents(..), Coords, inBounds)
+import Array2D ((@), Extents(..), Coords, inBounds, merge)
 
 data BoardVisualProps = BoardVP {
     boardSidePix :: Int
@@ -110,24 +110,43 @@ showGame g =
     <> showBoard bvp (boardState g)
 
 -- convert mouse click position to square coordinates
--- Nothing if the coordinates are out of board or
--- the selected square is empty or the piece is of
--- the wrong side 
-selectedPiece :: Game -> (Float,Float) -> Maybe Coords
-selectedPiece g (x,y) = 
+-- Nothing if the coordinates are out of board.
+clickToBoardCoords :: Game -> (Float,Float) -> Maybe Coords
+clickToBoardCoords g (x,y) = 
     let boardSide = boardSidePix $ boardVis g
         halfBoard = fromIntegral $ boardSide `div` 2
         squareSide = fromIntegral $ boardSide `div` 8
         crd = (truncate ((y + halfBoard)/squareSide),  truncate ((x + halfBoard)/squareSide))
         square = boardState g @ crd
-        valid = inBounds (Ex 8 8) crd && squareTaken square && sqSide square == toPlay g
-    in if valid then Just crd else Nothing 
+    in if inBounds (Ex 8 8) crd then Just crd else Nothing
+
+-- the selected square is empty or the piece is of
+-- the wrong side 
+selectedPiece :: Game -> (Float,Float) -> Maybe Coords
+selectedPiece g clickPos = 
+    clickToBoardCoords g clickPos >>= selectableCrd
+    where 
+      selectableCrd crd' = 
+        let square = boardState g @ crd'
+            valid = squareTaken square && sqSide square == toPlay g
+        in if valid then Just crd' else Nothing 
 
 eventCallback :: Event -> Game -> Game
 eventCallback (EventKey (MouseButton LeftButton) Down _ clickPos) g = 
-    case selected g of
+    let vms = validMoves (boardState g)
+
+    in case selected g of
         Nothing -> g{selected = selectedPiece g clickPos}
-        Just _ -> g{selected = Nothing}
+        Just origCrd -> case clickToBoardCoords g clickPos of 
+            Nothing -> g
+            Just crd -> if elem crd (vms origCrd)
+                        then g{selected = Nothing, 
+                               boardState = fromJust $ merge (boardState g) [
+                                  (origCrd, EmptySq), (crd, boardState g @ origCrd)
+                                ],
+                               toPlay = otherSide $ toPlay g
+                              }
+                        else g{selected = Nothing}
 
 eventCallback _ g = g
 

@@ -2,6 +2,7 @@
 
 module Lib (
     Side(..), Piece(..), Square(..), Board
+  , otherSide
   , startPositions, startBoard, emptyBoard
   , squareTaken, validMoves
 ) where
@@ -14,6 +15,10 @@ data Side = White | Black
 data Piece = Peon | Rook | Knight | Bishop | Queen | King
     deriving (Eq, Ord)
 data Square = EmptySq | Sq { sqSide :: Side, sqPiece :: Piece }
+
+otherSide :: Side -> Side
+otherSide White = Black
+otherSide Black = White
 
 squareTaken :: Square -> Bool
 squareTaken EmptySq = False
