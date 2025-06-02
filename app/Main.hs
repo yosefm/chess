@@ -14,7 +14,7 @@ import Array2D ((@), Extents(..), Coords, inBounds, merge)
 
 data BoardVisualProps = BoardVP {
     boardSidePix :: Int
-  , pieceImages :: BMP
+  , pieceImages :: M.Map (Side,Piece) Picture
 }
 
 -- I mean, I could do O(n) lookup with Ix and Vector,
@@ -60,17 +60,16 @@ board sidePix =
 showPiece :: BoardVisualProps -> Coords -> Square -> Picture
 showPiece _ _ EmptySq = Blank
 
-showPiece (BoardVP boardSide image) (r,c) (Sq side piece) = 
+showPiece (BoardVP boardSide images) (r,c) (Sq side piece) = 
     let squareSide = fromIntegral $ boardSide `div` 8
-        bmpData = bitmapDataOfBMP image
-        rect = fromJust $ M.lookup (side,piece) pieceRects
-
         rowCoord = (fromIntegral r + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
         colCoord = (fromIntegral c + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
 
         scale = squareSide / fromIntegral maxPieceHeight
 
-    in Translate colCoord rowCoord $ Scale scale scale $ BitmapSection rect bmpData
+    in Translate colCoord rowCoord $ 
+       Scale scale scale $ 
+       fromJust $ M.lookup (side,piece) images
 
 showBoard :: BoardVisualProps -> Board -> Picture
 showBoard bvp board = 
@@ -117,7 +116,6 @@ clickToBoardCoords g (x,y) =
         halfBoard = fromIntegral $ boardSide `div` 2
         squareSide = fromIntegral $ boardSide `div` 8
         crd = (truncate ((y + halfBoard)/squareSide),  truncate ((x + halfBoard)/squareSide))
-        square = boardState g @ crd
     in if inBounds (Ex 8 8) crd then Just crd else Nothing
 
 -- the selected square is empty or the piece is of
@@ -164,7 +162,8 @@ main = do
     piecesImage <- loadPiecesOrDie
 
     let boardSide = 600
-        gameInitState = Game startBoard (BoardVP boardSide piecesImage) White Nothing
+        extractedPieces = M.map (flip BitmapSection $ bitmapDataOfBMP piecesImage) pieceRects
+        gameInitState = Game startBoard (BoardVP boardSide extractedPieces) White Nothing
         
     play 
         (InWindow "StupidChess" (boardSide,boardSide) (10,10)) 
