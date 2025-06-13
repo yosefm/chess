@@ -5,7 +5,7 @@ import Array2D (merge)
 import Lib (validMoves, startBoard, emptyBoard, Piece (..), Side(..), Square(..))
 import Test.Hspec
 
-equalAsSets :: (Eq a, Ord a) => [a] -> [a] -> Bool
+equalAsSets :: Ord a => [a] -> [a] -> Bool
 equalAsSets a b = Set.fromList a == Set.fromList b
 
 main :: IO ()
@@ -16,6 +16,13 @@ main = hspec $ do
         it "lets black peon move forward to empty squares" $ do
             validMoves startBoard (6,1) `shouldSatisfy` equalAsSets [(4,1), (5,1)]
         
+        it "allows only one peon advance from non-start rank" $ do
+            let brd = fromJust $ merge emptyBoard [
+                    ((2,1), Sq White Peon)
+                  , ((5,0), Sq Black Peon)
+                  ]
+            validMoves brd (2,1) ++ validMoves brd (5,0) `shouldBe` [(3,1), (4,0)]
+
         it "lets white peon strike diagonally" $ do
             let brd = fromJust $ merge emptyBoard [
                     ((1,1), Sq White Peon)
