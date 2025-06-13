@@ -24,6 +24,10 @@ squareTaken :: Square -> Bool
 squareTaken EmptySq = False
 squareTaken _ = True
 
+peonStartRank :: Side -> Int
+peonStartRank White = 1
+peonStartRank Black = 6
+
 -- Generate initial positions for all pieces as 
 -- a replacements list for Arr2D (i.e. sparse representation)
 startPositions :: [((Int, Int), Square)]
@@ -33,8 +37,8 @@ startPositions =
         rank n = map (n,) [0..7]
         
         replsRank1 = zip (rank 0) $ squaresRank1 White
-        replsRank2 = map (,Sq White Peon) $ rank 1
-        replsRank7 = map (,Sq Black Peon) $ rank 6
+        replsRank2 = map (,Sq White Peon) $ rank $ peonStartRank White
+        replsRank7 = map (,Sq Black Peon) $ rank $ peonStartRank Black
         replsRank8 = zip (rank 7) $ squaresRank1 Black
         
     in concat [replsRank1, replsRank2, replsRank7, replsRank8]
@@ -72,7 +76,10 @@ validMoves  brd crd@(r,c) =
         Sq side piece -> case piece of
             Peon -> let advance White = 1
                         advance Black = (-1)
-                        advanceMoves = takeWhile advanceValid [(r + advance side, c), (r + (2*advance side), c)]
+                        secondAdvance = if r == peonStartRank side 
+                            then [(r + (2*advance side), c)]
+                            else []
+                        advanceMoves = takeWhile advanceValid $ (r + advance side, c) : secondAdvance
 
                         strikeValid crd' = inBounds (arrShape brd) crd' 
                             && squareTaken (brd @ crd') 
