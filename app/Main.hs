@@ -15,6 +15,7 @@ import Array2D ((@), Extents(..), Coords, inBounds, merge)
 data BoardVisualProps = BoardVP {
     boardSidePix :: Int
   , pieceImages :: M.Map (Side,Piece) Picture
+  , statusLineThicknessPix :: Int
 }
 
 -- I mean, I could do O(1) lookup with Ix and Vector,
@@ -60,7 +61,7 @@ board sidePix =
 showPiece :: BoardVisualProps -> Coords -> Square -> Picture
 showPiece _ _ EmptySq = Blank
 
-showPiece (BoardVP boardSide images) (r,c) (Sq side piece) = 
+showPiece (BoardVP boardSide images _) (r,c) (Sq side piece) = 
     let squareSide = fromIntegral $ boardSide `div` 8
         rowCoord = (fromIntegral r + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
         colCoord = (fromIntegral c + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
@@ -77,7 +78,7 @@ showBoard bvp board =
     in mconcat $ map (\at -> showPiece bvp at $ board @ at) boardCoords
 
 showSelection :: BoardVisualProps -> Coords -> Picture
-showSelection (BoardVP boardSide _) (r,c) = 
+showSelection (BoardVP boardSide _ _) (r,c) = 
     let squareSide = boardSide `div` 8
         rowCoord = fromIntegral $ r*squareSide - boardSide `div` 2
         colCoord = fromIntegral $ c*squareSide - boardSide `div` 2
@@ -85,7 +86,7 @@ showSelection (BoardVP boardSide _) (r,c) =
     in Translate colCoord rowCoord $ Color red $ square squareSide
 
 showValidTarget :: BoardVisualProps -> Coords -> Picture
-showValidTarget (BoardVP boardSide _) (r,c) = 
+showValidTarget (BoardVP boardSide _ _) (r,c) = 
     let squareSide = fromIntegral $ boardSide `div` 8
         rowCoord = (fromIntegral r + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
         colCoord = (fromIntegral c + 0.5)*squareSide - fromIntegral (boardSide `div` 2)
@@ -99,14 +100,27 @@ data Game = Game {
   , selected :: Maybe Coords
 }
 
+showStatus :: Game -> Picture
+showStatus g = 
+    let bvp = boardVis g
+        statusPix = fromIntegral $ statusLineThicknessPix bvp
+        vectorLineHeight = 5
+        textScale = vectorLineHeight/statusPix
+        halfBoard = fromIntegral $ boardSidePix bvp `div` 2
+    in Translate (-halfBoard) (vectorLineHeight - statusPix - halfBoard) $
+       Scale textScale textScale $
+       Text $ show (toPlay g) ++ " to play."
+
 showGame :: Game -> Picture
 showGame g = 
     let bvp = boardVis g
-    in mconcat (catMaybes [
+        statusPix = statusLineThicknessPix bvp
+    in Translate 0 ((fromIntegral statusPix)/2) $ (mconcat (catMaybes [
         Just (board $ boardSidePix bvp)
       , showSelection bvp <$> selected g
       ] ++ map (showValidTarget bvp) (maybe [] (validMoves (boardState g)) (selected g)))
-    <> showBoard bvp (boardState g)
+    <> showBoard bvp (boardState g))
+    <> showStatus g
 
 -- convert mouse click position to square coordinates
 -- Nothing if the coordinates are out of board.
@@ -163,10 +177,10 @@ main = do
 
     let boardSide = 600
         extractedPieces = M.map (flip BitmapSection $ bitmapDataOfBMP piecesImage) pieceRects
-        gameInitState = Game startBoard (BoardVP boardSide extractedPieces) White Nothing
+        gameInitState = Game startBoard (BoardVP boardSide extractedPieces 30) White Nothing
         
     play 
-        (InWindow "StupidChess" (boardSide,boardSide) (10,10)) 
+        (InWindow "StupidChess" (boardSide,boardSide + 30) (10,10)) 
         white 30 gameInitState 
         showGame eventCallback (\_ g -> g)
     

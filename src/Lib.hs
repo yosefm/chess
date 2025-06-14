@@ -11,7 +11,7 @@ import Data.Maybe (fromJust)
 import Array2D (Arr2D(..), mkArr2D, Extents(..), Coords, (@), inBounds, merge)
 
 data Side = White | Black 
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 data Piece = Peon | Rook | Knight | Bishop | Queen | King
     deriving (Eq, Ord)
 data Square = EmptySq | Sq { sqSide :: Side, sqPiece :: Piece }
