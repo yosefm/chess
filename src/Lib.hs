@@ -4,7 +4,7 @@ module Lib (
     Side(..), Piece(..), Square(..), Board
   , otherSide
   , startPositions, startBoard, emptyBoard
-  , squareTaken, validMoves, isChess
+  , squareTaken, validMoves, isCheck
 ) where
 
 import Data.Maybe (fromJust)
@@ -101,7 +101,7 @@ validMoves  brd crd@(r,c) =
 -- is the king of the given side threatened?
 -- This can be improved by only checking last-moved-to coordinate,
 -- with cooperation from driver code.
-isChess :: Board -> Side -> Bool
-isChess brd side = any isKing $ boardCoords >>= validMoves brd
+isCheck :: Board -> Side -> Bool
+isCheck brd side = any isKing $ boardCoords >>= validMoves brd
     where boardCoords = [(row, col) | row <- [0..7], col <- [0..7]]
           isKing crd = brd @ crd == Sq side King

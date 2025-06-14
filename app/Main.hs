@@ -107,9 +107,19 @@ showStatus g =
         vectorLineHeight = 5
         textScale = vectorLineHeight/statusPix
         halfBoard = fromIntegral $ boardSidePix bvp `div` 2
-    in Translate (-halfBoard) (vectorLineHeight - statusPix - halfBoard) $
-       Scale textScale textScale $
-       Text $ show (toPlay g) ++ " to play."
+        rowCoord = (vectorLineHeight - statusPix - halfBoard)
+        
+        inCheck = isCheck (boardState g) (toPlay g)
+        checkLabel = 
+            Translate (halfBoard - (fromIntegral $ length "CHECK")*statusPix) rowCoord $
+            Scale textScale textScale $
+            Color red $ Text "CHECK"
+        
+        toPlayLabel = Translate (-halfBoard) rowCoord $
+            Scale textScale textScale $
+            Text $ show (toPlay g) ++ " to play."
+
+    in toPlayLabel <> if inCheck then checkLabel else Blank
 
 showGame :: Game -> Picture
 showGame g = 
