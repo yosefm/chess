@@ -17,7 +17,7 @@ data BoardVisualProps = BoardVP {
   , pieceImages :: M.Map (Side,Piece) Picture
 }
 
--- I mean, I could do O(n) lookup with Ix and Vector,
+-- I mean, I could do O(1) lookup with Ix and Vector,
 -- but it would look ugly and there's no call for performance here.
 pieceRects :: M.Map (Side,Piece) Rectangle
 pieceRects = M.fromList [
