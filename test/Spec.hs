@@ -61,7 +61,7 @@ main = hspec $ do
                   , ((4,0), Sq Black Peon) -- blocked up moves by strike
                   ]
             validMoves brd (2,2) `shouldSatisfy` equalAsSets 
-                [(2,3), (2,1), (2,0), (1,2), (0,2), (3,2), (4,2), (3,3), (3,1), (4,0), (1,1), (1,3), (0,0), (0,4)]
+                [(2,3), (2,1), (2,0), (0,2), (1,2), (3,2), (4,2), (3,3), (3,1), (4,0), (1,1), (1,3), (0,0), (0,4)]
         
         it "generates knight moves except on own pieces" $ do
             let brd = fromJust $ merge emptyBoard [
@@ -79,7 +79,16 @@ main = hspec $ do
                   , ((2,3), Sq Black Peon) -- blocked up moves by strike
                   ]
             validMoves brd (2,2) `shouldSatisfy` equalAsSets 
-                [(3,1), (3,2), (2,1), (2,3), (1,1), (1,2), (1,3)]
+                [(3,1), (3,2), (2,1), (2,3), (1,1), (1,3)]
+        
+        it "disallows king move to checked position" $ do
+            let brd = fromJust $ merge emptyBoard [
+                    ((2,2), Sq White King)
+                  , ((2,3), Sq White Peon) -- blocked by same side
+                  , ((3,4), Sq Black Rook) -- blocked up moves by check
+                  ]
+            validMoves brd (2,2) `shouldSatisfy` equalAsSets 
+                [(2,1), (1,1), (1,2), (1,3)]
     
     describe "Board States" $ do
         let whiteChessedBrd = fromJust $ merge emptyBoard [
@@ -93,6 +102,13 @@ main = hspec $ do
                   , ((1,1), Sq White Peon) -- blocker
                   , ((1,2), Sq Black Knight) -- threat
                   ]
+            
+            corneredMateRook = fromJust $ merge emptyBoard [
+                    ((0,0), Sq White King)
+                  , ((1,0), Sq White Peon) -- blocker
+                  , ((1,1), Sq White Peon) -- blocker
+                  , ((0,3), Sq Black Rook) -- threat
+                  ]
         
         it "identifies chess state" $ do
             isCheck whiteChessedBrd White `shouldBe` True
@@ -105,3 +121,6 @@ main = hspec $ do
         
         it "identifies mate" $ do
             threatLevel corneredMate White `shouldBe` Mate
+        
+        it "disallows king move to checked position" $ do
+            threatLevel corneredMateRook White `shouldBe` Mate
