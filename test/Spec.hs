@@ -2,8 +2,8 @@ import qualified Data.Set as Set
 import Data.Maybe (fromJust)
 import Array2D (merge)
 
-import Lib (validMoves, isChess
-    , startBoard, emptyBoard, Piece (..), Side(..), Square(..))
+import Lib (validMoves, isCheck, threatLevel
+    , startBoard, emptyBoard, Piece (..), Side(..), Square(..), ThreatLevel(..))
 import Test.Hspec
 
 equalAsSets :: Ord a => [a] -> [a] -> Bool
@@ -86,12 +86,22 @@ main = hspec $ do
                     ((2,2), Sq White King)
                   , ((3,3), Sq Black Peon) -- puts king in chess
                   ]
+            corneredMate = fromJust $ merge emptyBoard [
+                    ((0,0), Sq White King)
+                  , ((0,1), Sq White Rook) -- blocker
+                  , ((1,0), Sq White Peon) -- blocker
+                  , ((1,1), Sq White Peon) -- blocker
+                  , ((1,2), Sq Black Knight) -- threat
+                  ]
         
         it "identifies chess state" $ do
-            isChess whiteChessedBrd White `shouldBe` True
+            isCheck whiteChessedBrd White `shouldBe` True
         
         it "respects side in chess query" $ do
-            isChess whiteChessedBrd Black `shouldBe` False
+            isCheck whiteChessedBrd Black `shouldBe` False
         
         it "identifies that there is no chess" $ do
-            isChess startBoard White `shouldBe` False
+            isCheck startBoard White `shouldBe` False
+        
+        it "identifies mate" $ do
+            threatLevel corneredMate White `shouldBe` Mate

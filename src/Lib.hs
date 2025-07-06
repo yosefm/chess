@@ -1,10 +1,10 @@
 {-# LANGUAGE TupleSections #-}
 
 module Lib (
-    Side(..), Piece(..), Square(..), Board
+    Side(..), Piece(..), Square(..), Board, ThreatLevel(..)
   , otherSide
   , startPositions, startBoard, emptyBoard
-  , squareTaken, validMoves, isCheck
+  , squareTaken, validMoves, isCheck, threatLevel
 ) where
 
 import Data.Maybe (fromJust)
@@ -16,6 +16,8 @@ data Piece = Peon | Rook | Knight | Bishop | Queen | King
     deriving (Eq, Ord)
 data Square = EmptySq | Sq { sqSide :: Side, sqPiece :: Piece }
     deriving Eq
+
+data ThreatLevel = Safe | Check | Mate deriving (Eq, Show)
 
 otherSide :: Side -> Side
 otherSide White = Black
@@ -98,10 +100,26 @@ validMoves  brd crd@(r,c) =
 
             King -> filter (advanceOrStrike side) [(r + dr, c + dc) | dr <- [-1..1], dc <-[-1..1]]
 
+checkedKing :: Board -> Side -> Maybe Coords
+checkedKing brd side
+    | whereChecked == []  = Nothing
+    | otherwise           = Just $ head whereChecked
+
+  where 
+    boardCoords = [(row, col) | row <- [0..7], col <- [0..7]]
+    isKing crd = brd @ crd == Sq side King
+
+    whereChecked = filter isKing $ boardCoords >>= validMoves brd
+
+threatLevel :: Board -> Side -> ThreatLevel
+threatLevel brd side = case checkedKing brd side of
+    Nothing -> Safe
+    Just crd  
+      | length (validMoves brd crd) > 0 -> Check
+      | otherwise -> Mate
+
 -- is the king of the given side threatened?
 -- This can be improved by only checking last-moved-to coordinate,
 -- with cooperation from driver code.
 isCheck :: Board -> Side -> Bool
-isCheck brd side = any isKing $ boardCoords >>= validMoves brd
-    where boardCoords = [(row, col) | row <- [0..7], col <- [0..7]]
-          isKing crd = brd @ crd == Sq side King
+isCheck b = (== Check) . threatLevel b
