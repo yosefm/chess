@@ -2,6 +2,7 @@ module Main (main) where
 
 import qualified Data.Map as M
 import Data.Maybe (fromJust, catMaybes)
+import Data.Char (toUpper)
 
 import System.Exit (exitFailure)
 import Codec.BMP (BMP, readBMP)
@@ -109,17 +110,20 @@ showStatus g =
         halfBoard = fromIntegral $ boardSidePix bvp `div` 2
         rowCoord = (vectorLineHeight - statusPix - halfBoard)
         
-        inCheck = isCheck (boardState g) (toPlay g)
-        checkLabel = 
-            Translate (halfBoard - (fromIntegral $ length "CHECK")*statusPix) rowCoord $
+        threat2Str Safe = ""
+        threat2Str thr = map toUpper $ show thr
+
+        threatStr = threat2Str $ threatLevel (boardState g) (toPlay g)
+        threatLabel = 
+            Translate (halfBoard - (fromIntegral $ length threatStr)*statusPix) rowCoord $
             Scale textScale textScale $
-            Color red $ Text "CHECK"
+            Color red $ Text $ threatStr
         
         toPlayLabel = Translate (-halfBoard) rowCoord $
             Scale textScale textScale $
             Text $ show (toPlay g) ++ " to play."
 
-    in toPlayLabel <> if inCheck then checkLabel else Blank
+    in toPlayLabel <> threatLabel
 
 showGame :: Game -> Picture
 showGame g = 
